@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""
+CLI entry point for Multi-Sensor Extrinsics Calibration
+"""
+
+import sys
+import os
+import argparse
+import json
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from main import main
+from visualization import create_visualization_report
+
+
+def main_cli():
+    """Main CLI function."""
+    parser = argparse.ArgumentParser(description='Multi-Sensor Extrinsics Calibration')
+    parser.add_argument('--detections', default='out/detections.csv',
+                       help='Path to detections CSV file')
+    parser.add_argument('--cameras', default='out/cams.json',
+                       help='Path to camera intrinsics JSON file')
+    parser.add_argument('--output', default='out/results.json',
+                       help='Path to output results JSON file')
+    parser.add_argument('--visualize', action='store_true',
+                       help='Generate visualization plots')
+    parser.add_argument('--poses', type=int, default=50,
+                       help='Number of camera poses to generate')
+    parser.add_argument('--noise', type=float, default=0.5,
+                       help='Pixel noise standard deviation')
+    
+    args = parser.parse_args()
+    
+    # Create output directory
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    
+    print("=== Multi-Sensor Extrinsics Calibration ===")
+    print(f"Detections: {args.detections}")
+    print(f"Cameras: {args.cameras}")
+    print(f"Output: {args.output}")
+    print(f"Poses: {args.poses}")
+    print(f"Noise: {args.noise}")
+    
+    # Run calibration
+    success = main()
+    
+    if success:
+        print("\n✓ Calibration completed successfully!")
+        
+        if args.visualize:
+            print("Generating visualizations...")
+            create_visualization_report(args.detections, args.output, args.cameras)
+            print("Visualizations saved to out/ directory")
+    else:
+        print("\n✗ Calibration failed!")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main_cli()
+
